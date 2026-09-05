@@ -7,7 +7,7 @@ from app.core.deps import get_current_portal_user, get_db, get_odoo_gateway
 from app.models.enums import Role
 from app.odoo.interface import OdooGateway
 from app.schemas.common import DataResponse
-from app.schemas.identity import MagicLinkRequest, TokenResponse
+from app.schemas.identity import MagicLinkRequest, TokenResponse, UserLoginRequest
 from app.schemas.negotiation import PortalCommentCreate
 from app.schemas.portal import (
     PortalCommentPublicRead,
@@ -19,6 +19,21 @@ from app.schemas.portal import (
 from app.services import auth_service, negotiation_service, portal_service
 
 router = APIRouter()
+
+
+@router.post("/auth/login", response_model=DataResponse[TokenResponse])
+def portal_login(
+    payload: UserLoginRequest,
+    db: Session = Depends(get_db),
+    gateway: OdooGateway = Depends(get_odoo_gateway),
+):
+    token_resp = auth_service.authenticate_user(
+        db=db,
+        gateway=gateway,
+        login=payload.login,
+        password=payload.password,
+    )
+    return DataResponse(data=token_resp)
 
 
 @router.post("/auth/magic-link", status_code=202)
@@ -58,6 +73,20 @@ def verify_portal_magic_link(
         raw_token=token,
     )
     return DataResponse(data=token_resp)
+
+
+@router.get("/deals", response_model=DataResponse[Any])
+def list_portal_deals(
+    db: Session = Depends(get_db),
+    gateway: OdooGateway = Depends(get_odoo_gateway),
+    portal_user: Any = Depends(get_current_portal_user),
+):
+    deals = portal_service.list_deals_for_portal(
+        db=db,
+        gateway=gateway,
+        customer_partner_id=portal_user.partner_id,
+    )
+    return DataResponse(data=deals)
 
 
 @router.get("/deals/{deal_id}", response_model=DataResponse[PortalDealRead])

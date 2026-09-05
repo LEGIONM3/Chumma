@@ -212,3 +212,24 @@ def confirm_deal_by_customer(
 
     db.commit()
     return get_deal_for_portal(db, gateway, deal_id, customer_partner_id)
+
+
+def list_deals_for_portal(
+    db: Session,
+    gateway: OdooGateway,
+    customer_partner_id: int,
+) -> List[Dict[str, Any]]:
+    deals = db.query(Deal).filter(Deal.odoo_partner_id == customer_partner_id).order_by(Deal.created_at.desc()).all()
+    results = []
+    for d in deals:
+        results.append({
+            "id": str(d.id),
+            "reference": d.reference,
+            "status": d.status,
+            "approval_state": d.approval_state,
+            "amount_total": float(d.amount_total_cache or 0.0),
+            "currency_code": d.currency_code or "INR",
+            "created_at": d.created_at.isoformat() if d.created_at else None,
+        })
+    return results
+

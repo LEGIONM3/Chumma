@@ -1,4 +1,4 @@
-﻿import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { mockState } from './state';
 
 export const handlers = [
@@ -9,6 +9,7 @@ export const handlers = [
     if (body.login?.includes('admin')) user = mockState.users.admin;
     else if (body.login?.includes('manager')) user = mockState.users.manager1;
     else if (body.login?.includes('finance')) user = mockState.users.finance;
+    else if (body.login?.includes('buyer') || body.login?.includes('acme')) user = mockState.users.portalAcme;
 
     return HttpResponse.json({
       data: {
@@ -16,6 +17,22 @@ export const handlers = [
         token_type: 'bearer',
         expires_in: 43200,
         user,
+      },
+    });
+  }),
+
+  http.post('*/api/v1/portal/auth/login', async ({ request }) => {
+    const body = (await request.json()) as any;
+    let partnerName = 'Acme Corp';
+    let partnerId = 1;
+    if (body.login?.includes('beta')) { partnerName = 'Beta Ltd'; partnerId = 2; }
+    else if (body.login?.includes('gamma')) { partnerName = 'Gamma Inc'; partnerId = 3; }
+    return HttpResponse.json({
+      data: {
+        access_token: 'mock_jwt_portal_customer',
+        token_type: 'bearer',
+        expires_in: 14400,
+        partner: { id: partnerId, name: partnerName },
       },
     });
   }),

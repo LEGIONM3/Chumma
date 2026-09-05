@@ -28,6 +28,21 @@ export const authApi = {
   logout: (): Promise<{ message: string }> =>
     apiClient('/auth/logout', { method: 'POST' }),
 
+  portalLogin: async (login: string, password: string): Promise<PortalAuthResponse> => {
+    const data = await apiClient<any>('/portal/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ login, password }),
+    });
+    return {
+      access_token: data.access_token,
+      token_type: data.token_type,
+      partner: {
+        id: data.partner_id || data.odoo_user_id || 1,
+        name: data.name || 'Customer',
+      },
+    };
+  },
+
   requestMagicLink: (email: string): Promise<void> =>
     apiClient('/portal/auth/magic-link', {
       method: 'POST',

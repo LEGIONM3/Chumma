@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from './authStore';
 import { authApi } from '@/api/endpoints/auth';
@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { HintStrip } from '@/components/data/HintStrip';
 import { ForgotPasswordDialog } from './ForgotPasswordDialog';
 import { Loader2 } from 'lucide-react';
+
+import { usePortalAuthStore } from '@/features/portal/portalAuthStore';
 
 export const LoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
@@ -27,8 +29,16 @@ export const LoginPage: React.FC = () => {
 
     try {
       const res = await authApi.login(login, password);
-      setAuth(res.access_token, res.user);
-      navigate('/');
+      if (res.user.role === 'CUSTOMER') {
+        usePortalAuthStore.getState().setAuth(res.access_token, {
+          id: (res.user as any).partner_id || res.user.odoo_user_id || 1,
+          name: res.user.name,
+        });
+        navigate('/portal');
+      } else {
+        setAuth(res.access_token, res.user);
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
@@ -159,6 +169,13 @@ export const LoginPage: React.FC = () => {
                 className="px-2 py-0.5 rounded text-[10px] bg-elevated hover:bg-elevated/80 text-text-secondary border border-border"
               >
                 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLogin('buyer@acme.test'); setPassword('Password123!'); }}
+                className="px-2 py-0.5 rounded text-[10px] bg-brand/20 hover:bg-brand/30 text-brand border border-brand/40 font-semibold"
+              >
+                Customer (Acme)
               </button>
             </div>
           </div>

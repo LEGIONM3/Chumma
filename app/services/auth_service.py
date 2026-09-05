@@ -35,16 +35,22 @@ def authenticate_user(
         # 2. Upsert local DealflowUser
         user = db.query(DealflowUser).filter(DealflowUser.odoo_user_id == odoo_auth.uid).first()
         sales_team_id = getattr(odoo_auth, "sales_team_id", getattr(odoo_auth, "team_id", None))
+        is_portal_user = getattr(odoo_auth, "is_share", False) or any("portal" in g.lower() for g in getattr(odoo_auth, "groups", []))
         if not user:
-            initial_role = Role.ADMIN.value if login in ("admin", "admin@dealflow.test") else Role.SALES_REP.value
-            for group in odoo_auth.groups:
-                g_lower = group.lower()
-                if "admin" in g_lower:
-                    initial_role = Role.ADMIN.value
-                elif "manager" in g_lower:
-                    initial_role = Role.SALES_MANAGER.value
-                elif "billing" in g_lower or "account" in g_lower or "finance" in g_lower:
-                    initial_role = Role.FINANCE.value
+            if is_portal_user:
+                initial_role = Role.CUSTOMER.value
+            elif login in ("admin", "admin@dealflow.test"):
+                initial_role = Role.ADMIN.value
+            else:
+                initial_role = Role.SALES_REP.value
+                for group in odoo_auth.groups:
+                    g_lower = group.lower()
+                    if "admin" in g_lower:
+                        initial_role = Role.ADMIN.value
+                    elif "manager" in g_lower:
+                        initial_role = Role.SALES_MANAGER.value
+                    elif "billing" in g_lower or "account" in g_lower or "finance" in g_lower:
+                        initial_role = Role.FINANCE.value
 
             user = DealflowUser(
                 odoo_user_id=odoo_auth.uid,
@@ -52,7 +58,7 @@ def authenticate_user(
                 name=odoo_auth.name,
                 role=initial_role,
                 sales_team_odoo_id=sales_team_id,
-                is_portal=False,
+                is_portal=is_portal_user,
                 partner_id=odoo_auth.partner_id,
                 is_active=True,
                 last_login_at=utc_now(),
@@ -61,6 +67,10 @@ def authenticate_user(
         else:
             user.name = odoo_auth.name
             user.last_login_at = utc_now()
+            if is_portal_user:
+                user.is_portal = True
+                user.role = Role.CUSTOMER.value
+                user.partner_id = odoo_auth.partner_id
             if sales_team_id:
                 user.sales_team_odoo_id = sales_team_id
         
@@ -71,6 +81,25 @@ def authenticate_user(
         raise UnauthorizedError("User account is inactive.")
 
     # 3. Create JWT
+    if getattr(user, "is_portal", False):
+        token_str = security.create_portal_token(
+            subject=str(user.partner_id or user.odoo_user_id),
+            customer_id=str(user.partner_id or user.odoo_user_id),
+            company_id="1",
+            role=Role.CUSTOMER.value,
+            expires_delta=timedelta(minutes=settings.PORTAL_TOKEN_EXPIRE_MINUTES),
+        )
+        return TokenResponse(
+            access_token=token_str,
+            token_type="bearer",
+            expires_in=settings.PORTAL_TOKEN_EXPIRE_MINUTES * 60,
+            role=Role.CUSTOMER,
+            odoo_user_id=user.odoo_user_id,
+            name=user.name,
+            is_portal=True,
+            partner_id=user.partner_id,
+        )
+
     token_str = security.create_access_token(
         subject=str(user.odoo_user_id),
         role=user.role,
