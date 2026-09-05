@@ -33,11 +33,14 @@ sessions/
 *.swo
 *~
 
-# Local PostgreSQL & Downloads
+# Local PostgreSQL & Downloads & Databases
 pgsql/
 pg_data/
 *.zip
 *.bin
+*.db
+*.sqlite
+.env
 
 # Node / Frontend
 node_modules/

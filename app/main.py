@@ -26,7 +26,21 @@ logger = logging.getLogger("dealflow360")
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting DealFlow360 backend application...")
     try:
-        from app.jobs.scheduler import start_scheduler, stop_scheduler
+        from app.db.base import Base
+        from app.db.session import engine, SessionLocal
+        from app.odoo import get_gateway
+        from app.seed.seed import seed_all
+        Base.metadata.create_all(bind=engine)
+        with SessionLocal() as db:
+            from app.models.identity import DealflowUser
+            if not db.query(DealflowUser).first():
+                seed_all(db, get_gateway())
+                logger.info("Database auto-seeded successfully.")
+    except Exception as e:
+        logger.warning(f"Database initialization: {e}")
+
+    try:
+        from app.jobs.scheduler import start_scheduler
         start_scheduler()
     except Exception as e:
         logger.warning(f"Scheduler initialization deferred: {e}")

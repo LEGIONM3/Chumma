@@ -1,12 +1,27 @@
-﻿import { apiClient } from '../client';
+import { apiClient } from '../client';
 import type { AuthResponse, PortalAuthResponse, AuthUser } from '../types';
 
 export const authApi = {
-  login: (login: string, password: string): Promise<AuthResponse> =>
-    apiClient('/auth/login', {
+  login: async (login: string, password: string): Promise<AuthResponse> => {
+    const data = await apiClient<any>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ login, password }),
-    }),
+    });
+    const user: AuthUser = data.user || {
+      id: data.odoo_user_id,
+      odoo_user_id: data.odoo_user_id,
+      name: data.name,
+      role: data.role,
+      company_id: 1,
+      is_active: true,
+    };
+    return {
+      access_token: data.access_token,
+      token_type: data.token_type,
+      expires_in: data.expires_in,
+      user,
+    };
+  },
 
   me: (): Promise<AuthUser> => apiClient('/auth/me'),
 

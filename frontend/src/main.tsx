@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppProviders } from './app/providers';
 import { AppRouter } from './app/router';
@@ -6,7 +6,7 @@ import './styles/globals.css';
 import { USE_MOCKS } from './lib/constants';
 
 async function prepareApp() {
-  if (USE_MOCKS || import.meta.env.DEV) {
+  if (USE_MOCKS) {
     try {
       const { worker } = await import('./mocks/browser');
       await worker.start({
