@@ -1,0 +1,52 @@
+import type { AuthUser } from '@/api/types';
+
+export const MOCK_USERS: Record<string, AuthUser & { partner_id?: number }> = {
+  admin: {
+    id: 1,
+    odoo_user_id: 1,
+    name: 'System Admin',
+    role: 'ADMIN',
+    email: 'admin@dealflow.test',
+    company_id: 1,
+    is_active: true,
+  },
+  manager1: {
+    id: 2,
+    odoo_user_id: 2,
+    name: 'Sales Manager North',
+    role: 'SALES_MANAGER',
+    team_id: 1,
+    email: 'manager1@dealflow.test',
+    company_id: 1,
+    is_active: true,
+  },
+  rep1: {
+    id: 4,
+    odoo_user_id: 4,
+    name: 'Sales Rep One',
+    role: 'SALES_REP',
+    team_id: 1,
+    email: 'rep1@dealflow.test',
+    company_id: 1,
+    is_active: true,
+  },
+  finance: {
+    id: 6,
+    odoo_user_id: 6,
+    name: 'Finance Officer',
+    role: 'FINANCE',
+    email: 'finance@dealflow.test',
+    company_id: 1,
+    is_active: true,
+  },
+  portalAcme: {
+    id: 10,
+    odoo_user_id: 10,
+    partner_id: 1,
+    name: 'Acme Buyer',
+    role: 'CUSTOMER',
+    email: 'buyer@acme.test',
+    company_id: 1,
+    is_active: true,
+  },
+};

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+playwright-report/
+test-results/
+.env.local
+.env.*.local

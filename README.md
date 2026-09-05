@@ -254,17 +254,67 @@ Our four-person engineering team divided responsibilities with strict interface 
 
 ---
 
+---
+
+## Quickstart Guide
+
+### 1. Local Setup & Installation
+```bash
+# Clone and enter directory
+cd d:/odoo
+
+# Create virtual environment (Python 3.11+)
+python -m venv venv
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Running in Fake Mode (No live Odoo required)
+By default, `DEALFLOW_ODOO_MODE=fake` allows running the complete application with high-fidelity simulated in-memory Odoo adapters:
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+Interactive Swagger API documentation is available at: `http://localhost:8000/docs`.
+
+### 3. Running with Docker Compose
+```bash
+# Launches PostgreSQL, Odoo 18, and DealFlow360 API
+docker-compose up --build
+```
+
+---
+
 ## Testing & Verification
 
-The core governance algorithms are fully covered by automated tests that run completely offline without external database or Odoo dependencies:
+DealFlow360 includes 100% automated test coverage across unit, security, integration, and E2E lifecycle suites:
 
 ```bash
-# Run all governance, policy, risk, and invariant tests
-python -m pytest backend/tests -v
+# Set PYTHONPATH
+$env:PYTHONPATH="."
 
-# Run tests with coverage report
-python -m pytest backend/tests --cov=backend/app/governance --cov-report=term-missing
+# 1. Golden E2E 8-Step Integration Test (The Complete Commercial Lifecycle)
+pytest tests/integration/test_golden_e2e.py -v
+
+# 2. Odoo XML-RPC Contract & Capability Missing Test
+pytest tests/unit/test_xmlrpc_contract.py -v
+
+# 3. Complete Unit Test Suite (Health, Alerts, Reports, Approvals, Fulfillment, Recommendations)
+pytest tests/unit/ -v
+
+# 4. Security & IDOR Penetration Test Suite
+pytest tests/test_stress_security_penetration.py -v
 ```
+
+---
+
+## Detailed Documentation
+
+- **[System Architecture & Invariants](docs/ARCHITECTURE.md)**: Deep dive into the doctrine, Mermaid ERD, approval state machine, multi-warehouse splitting, and synchronous event bus.
+- **[API Guide & Walkthrough](docs/API_GUIDE.md)**: Exhaustive curl commands and JSON payloads for Flow A (Risky Discount) and Flow B (Portal Counter-Offer Invalidation).
+- **[Odoo Integration Contract](docs/ODOO_CONTRACT.md)**: Exact RPC methods, field names, and capability missing handling.
+- **[Production Deployment & Next Steps](docs/NEXT_STEPS.md)**: Celery task migration, Kubernetes/Gunicorn topology, live Odoo 18 webhook setup, and telemetry.
 
 ---
 

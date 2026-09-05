@@ -1,0 +1,26 @@
+﻿:root {
+  --bg-app: #0B0F14;
+  --bg-surface: #12161C;
+  --bg-elevated: #1A2029;
+  --border: #2A313B;
+  --border-strong: #3B4552;
+  --text-primary: #F2F5F8;
+  --text-secondary: #9AA4B2;
+  --text-muted: #6B7684;
+  --brand: #3B9EFF;
+  --brand-ink: #0B0F14;
+  --nav-active-bg: #0B0F14;
+  --success: #34C759;
+  --warning: #F5A623;
+  --danger: #FF5C5C;
+  --info: #3B9EFF;
+  --note-bg: #2A2410;
+  --note-border: #8A6D1F;
+  --note-text: #F1C45A;
+  --risk-low: #34C759;
+  --risk-medium: #F5A623;
+  --risk-high: #FF5C5C;
+  --health-healthy: #34C759;
+  --health-watch: #F5A623;
+  --health-at-risk: #FF5C5C;
+}

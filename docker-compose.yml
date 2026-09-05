@@ -1,47 +1,55 @@
+version: '3.8'
+
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: dealflow360-db
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: dealflow360
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d dealflow360"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     image: odoo:18.0
-    container_name: dealflow_odoo_web
+    container_name: dealflow360-odoo
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8069:8069"
+    volumes:
+      - ./dealflow_odoo:/mnt/extra-addons/dealflow_odoo
+      - ./odoo.conf:/etc/odoo/odoo.conf
     environment:
       - HOST=db
-      - PORT=5432
       - USER=odoo
       - PASSWORD=odoo
-    volumes:
-      - odoo-web-data:/var/lib/odoo
-      - ./odoo.conf:/etc/odoo/odoo.conf:ro
-      - ./dealflow_odoo:/mnt/extra-addons/dealflow_odoo
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "python3 -c \"import socket; s = socket.socket(); s.settimeout(3); s.connect(('127.0.0.1', 8069)); s.close()\" || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
-  db:
-    image: postgres:16-alpine
-    container_name: dealflow_odoo_db
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=odoo
-      - POSTGRES_PASSWORD=odoo
-      - PGDATA=/var/lib/postgresql/data/pgdata
+  api:
+    build: .
+    container_name: dealflow360-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data/pgdata
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://odoo:odoo@db:5432/dealflow360
+      SECRET_KEY: replace-with-a-secure-random-secret-key-dealflow360-min-32-chars
+      DEBUG: "true"
+      ODOO_URL: http://web:8069
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  odoo-web-data:
-  odoo-db-data:
+  postgres_data:
