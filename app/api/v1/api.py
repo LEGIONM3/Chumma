@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     health,
     negotiations,
     notifications,
+    odoo,
     policy,
     portal,
     recommendations,
@@ -34,3 +35,4 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 api_router.include_router(health.router, tags=["health", "alerts", "dashboard"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(odoo.router, prefix="/odoo", tags=["odoo"])
